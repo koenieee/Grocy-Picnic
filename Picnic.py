@@ -55,11 +55,6 @@ class PicNic(hass.Hass):
      #res = searchResFound
     # self.log("PicNic: " + res)
 
-#     self.listen_state(self.toggl_ledstrip,"input_boolean.ledstrip")
-	
-#  def toggl_ledstrip (self, entity, attribute, old, new, kwargs):
-#     ledstrip.toggle_off_on();
-
   def postToGrocy(self, apiPart: str, postData: str):
     url = self.grocy_api_url + apiPart
     header = {'GROCY-API-KEY': self.grocy_api_key}
