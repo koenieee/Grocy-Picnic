@@ -12,14 +12,14 @@ So this tool will be an easy way to import your order from picnic into grocy, bu
 
 Also an idea to enable machine vision to detects products without barcode.
 
-# Ssome ideas
+# Some ideas
 - Match barcodes of picnic products with AHConnector, or JumboConnector (See project Bart)
 - Make own database with recipes
-- Keep track of prices, if somewhere order by Albert heijn or Jumbo
+- Keep track of prices, if cheaper order by Albert heijn or Jumbo
 - Use machine vision (Tensorflow) to recongize vegatables with webcam)
-- Mnimize effort to keep track of own stock supply
+- Minimize effort to keep track of own stock supply
 - - E.g. with webcam and vision algorithm
-- - Or always use the order as stock resuppky and when selecting a recipe, consume everything from that recipe
+- - Or always use the order as stock resupply and when selecting a recipe, consume everything from that recipe
 
 
 # Product Data Picnic -> Grocy
