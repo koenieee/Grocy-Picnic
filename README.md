@@ -20,7 +20,7 @@ Also an idea to enable machine vision to detects products without barcode.
 - Minimize effort to keep track of own stock supply
 - - E.g. with webcam and vision algorithm
 - - Or always use the order as stock resupply and when selecting a recipe, consume everything from that recipe
-
+- Order food via Google Assistant to add to picnic basket
 
 # Product Data Picnic -> Grocy
 - picnic ID (userfield)
