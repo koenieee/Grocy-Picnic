@@ -7,7 +7,7 @@ Picnic (online supermarket) connection between Grocy (ERP fridge management tool
 - Hassio (Homeassistant) and AppDeamon
 
 # Future work
-I want to create a grocy database with ID's from PicNic products and their barcode (if there is one) and make a recipes list of products.
+I want to create a grocy database with ID's from PicNic products and their barcode (if there is one) and fill the database with their products and images.
 So this tool will be an easy way to import your order from picnic into grocy, but you still have to specify details on your own.
 
 Also an idea to enable machine vision to detects products without barcode.
