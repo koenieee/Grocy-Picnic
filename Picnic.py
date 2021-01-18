@@ -3,6 +3,7 @@ from python_picnic_api import PicnicAPI
 import json
 from supermarktconnector.jumbo import JumboConnector
 from supermarktconnector.ah import AHConnector
+from grocy import GrocyAPI
 import requests
 import urllib.request
 import re 
@@ -12,12 +13,12 @@ import config
 class PicNic():
   picnic_user = config.picnic_user
   picnic_passwd = config.picnic_passwd
-  grocy_api_key = config.grocy_api_key
-  grocy_api_url = config.grocy_api_url
+
   quantities=dict()
   
   
   picnic = PicnicAPI(username=picnic_user, password=picnic_passwd, country_code="NL", store=False)
+  grocy = GrocyAPI()
  # connector = JumboConnector()
   #connector = AHConnector()
   
@@ -27,7 +28,9 @@ class PicNic():
      #
     #koppeling maken tussen api, picnic en albert heijn
      #searchResFound = self.connector.get_product_details(self.connector.get_product_by_barcode('40097138'))["title"]
-
+   # self.addPicnicIDToProduct(40, "900")
+   # print(self.getProductInformation("10764022"))
+    #self.grocy.changePictureFileNameProduct("45", self.grocy.uploadProductPictureToGrocy("d3176c7b1cd82af60db515e93679768449919709c1e3a2525a3e0a3a9a7460f8"))
      self.getQuantityUnits()
      self.importLastPicnicDelivery()
   #   self.matchPicnicQuantityByGrocyQuantity("stuks")
@@ -41,61 +44,51 @@ class PicNic():
      #res = searchResFound
     # self.log("PicNic: " + res)
 
-  def getFromGrocy(self, apiPart: str):
-    url = self.grocy_api_url + apiPart
-    header = {'GROCY-API-KEY': self.grocy_api_key}
-    header["Content-Type"] = 'application/json'
-    header["accept"] = 'application/json'
-    x = requests.get( url, headers=header, verify=False)
-    return x
+
+  def addPicnicIDToProduct(self, product_id:str, picnic_id:str):
+    self.grocy.addUserFieldToProduct(str(product_id), "{\"picnic\":\""+picnic_id+"\"}")
 
 
-  def postToGrocy(self, apiPart: str, postData: str):
-    url = self.grocy_api_url + apiPart
-    header = {'GROCY-API-KEY': self.grocy_api_key}
-    header["Content-Type"] = 'application/json'
-    header["accept"] = 'application/json'
-    x = requests.post( url, data = postData, headers=header, verify=False)
-    return x
-
-  def addProductToGrocy(self, name: str, qu_id:str, shop_id: str, imgId: str, price: str):
+  def addPicNicProductToGrocy(self, name: str, tara_weight: str, qu_id:str, picnic_id: str, imgId: str, price: str):
     postData = """
     {
       "name": \""""+name+"""\",
       "qu_id_purchase": \""""+qu_id+"""\",
       "qu_id_stock": \""""+qu_id+"""\",
       "qu_factor_purchase_to_stock": "1.0",
-      "shopping_location_id": "3",
+      "shopping_location_id": "1",
       "location_id":"2",
-      "picture_file_name":\""""+imgId+""".png\",
-       "userfields": {
-          "picnic": \""""+shop_id+"""\"
-       }
+      "tare_weight": \""""+tara_weight+"""\"
     }"""
 
-    result = self.postToGrocy("objects/products", postData)
+    result = self.grocy.postToGrocy("objects/products", postData)
     if result.ok:
-        print("Product toegevoegd")
+        json_result = json.loads(result.text)
+        grocy_product_id = json_result["created_object_id"]
+        print("Product toegevoegd, nu picnicID toevoegen, grocy_id: " + grocy_product_id + ", picnic_id: " + picnic_id)
+        self.addPicnicIDToProduct(grocy_product_id, picnic_id)
+        print("Afbeelding uploaden.")
+        self.grocy.changePictureFileNameProduct(grocy_product_id, self.grocy.uploadProductPictureToGrocy(imgId))
     else:
-        print("product NIET toegevoegd")
+        print("product NIET toegevoegd, want: " + result.text)
 
-  def get_delivery(self, deliveryId: str):
-     self.log("DeliveryID: " + deliveryId)
-     path = "/product/" + deliveryId
+  def getProductInformation(self, productID: str):
+    # path = "/product/" + productID, just a test.
+     path = '/my_store/'
      return self.picnic._get(path)
      
   def importLastPicnicDelivery(self):
-    for x in self.picnic.get_deliveries()[0]["orders"][0]["items"]:
-        name = x["items"][0]["name"]
-        id = x["items"][0]["id"]
-        image_ids = x["items"][0]["image_ids"][0]
-        price = x["items"][0]["price"]
-        unit_quantity = x["items"][0]["unit_quantity"]
-        self.fillQuantity(unit_quantity)
-       # self.addProductToGrocy(name, id, image_ids, price)
+   # for x in self.picnic.get_deliveries()[0]["orders"][0]["items"]:
+    x = self.picnic.get_deliveries()[0]["orders"][0]["items"][9]
+    name = x["items"][0]["name"]
+    id = x["items"][0]["id"]
+    image_ids = x["items"][0]["image_ids"][0]
+    price = x["items"][0]["price"]
+    unit_quantity = x["items"][0]["unit_quantity"]
+    converted_quantity = self.fillQuantity(unit_quantity)
+    self.addPicNicProductToGrocy(name, converted_quantity[0], converted_quantity[1], id, image_ids, price)
         
   def fillQuantity(self, quantity_text: str):
-    #  print(quantity_text.replace(",", "."))
       replaced_text = quantity_text.replace(",", ".")
       temp = re.compile("([\d.]*\d+) ([a-zA-Z]+)") 
       res = temp.match(replaced_text).groups() 
@@ -104,10 +97,10 @@ class PicNic():
           res = temp.match(replaced_text).groups() 
           calculatie = int(res[0]) * int(res[1])
           new = [calculatie, res[2]]
-         
-          print("Qantitiy: " + str(new[0]) + " ID: " + str(self.matchPicnicQuantityByGrocyQuantity(new[1])))
+          
+          return [str(new[0]), str(self.matchPicnicQuantityByGrocyQuantity(new[1]))]
       else:    
-          print("Qantitiy: " + str(res[0]) + " ID: " + str(self.matchPicnicQuantityByGrocyQuantity(res[1])))
+          return [str(res[0]), str(self.matchPicnicQuantityByGrocyQuantity(res[1]))] #returns HOW_MUCH, WHAT_KIND_OF
       
   def matchPicnicQuantityByGrocyQuantity(self, picnicQuantity: str):
      #print("picnicquanitity: " + picnicQuantity)
@@ -122,8 +115,10 @@ class PicNic():
     #     if picnicQuantity == quantity["name"):
      #        return quantity["id"]
       
+
+
   def getQuantityUnits(self):
-      x = self.getFromGrocy('objects/quantity_units')
+      x = self.grocy.getFromGrocy('objects/quantity_units')
       json_data = json.loads(x.text)
       #print(json_data)
       for quantity in json_data:

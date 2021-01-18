@@ -23,6 +23,8 @@ Also an idea to enable machine vision to detects products without barcode.
 - - E.g. with webcam and vision algorithm
 - - Or always use the order as stock resupply and when selecting a recipe, consume everything from that recipe
 - Order food via Google Assistant to add to picnic basket
+- Maybe also add other supermarkets one day. 
+  For example if you buy in the Albert Heijn and scan your bonus card, you can retrieve the order and also add this to grocy. So no manual input for products...
 
 # Product Data Picnic -> Grocy
 - picnic ID (userfield)
