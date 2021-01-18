@@ -4,7 +4,9 @@ Picnic (online supermarket) connection between Grocy (ERP fridge management tool
 # Requirements
 - https://github.com/bartmachielsen/SupermarktConnector
 - https://github.com/MikeBrink/python-picnic-api
+- - Inspired by: https://github.com/MikeBrink/python-picnic-api/issues/7
 - Hassio (Homeassistant) and AppDeamon
+
 
 # Future work
 I want to create a grocy database with ID's from PicNic products and their barcode (if there is one) and fill the database with their products and images.
