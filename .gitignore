@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 .vscode/
+#specific user settings for api.
+config.py
