@@ -1,46 +1,36 @@
 from python_picnic_api import PicnicAPI
-import appdaemon.plugins.hass.hassapi as hass
+#import appdaemon.plugins.hass.hassapi as hass
 import json
 from supermarktconnector.jumbo import JumboConnector
 from supermarktconnector.ah import AHConnector
 import requests
 import urllib.request
 import re 
-
-#
-# PicNic Api app voor Grocey
-#
-# Args:
-#
-# 40097138 => donne huttenkase
-# 8718796026464 => ontbijtspek
-# 
+import config
 
 
-
-
-class PicNic(hass.Hass):
-  picnic_user = ''
-  picnic_passwd = ''
-  grocy_api_key = ''
-  grocy_api_url = ''
+class PicNic():
+  picnic_user = config.picnic_user
+  picnic_passwd = config.picnic_passwd
+  grocy_api_key = config.grocy_api_key
+  grocy_api_url = config.grocy_api_url
   quantities=dict()
+  
   
   picnic = PicnicAPI(username=picnic_user, password=picnic_passwd, country_code="NL", store=False)
  # connector = JumboConnector()
   #connector = AHConnector()
   
   def initialize(self):
-     self.log("PicNic Api AppDeamon")
-     
+    
     # searchResFound = picnic.search('Cottage Cheese.')
      #
     #koppeling maken tussen api, picnic en albert heijn
      #searchResFound = self.connector.get_product_details(self.connector.get_product_by_barcode('40097138'))["title"]
 
      self.getQuantityUnits()
-    # self.importLastPicnicDelivery()
-     self.matchPicnicQuantityByGrocyQuantity("stuks")
+     self.importLastPicnicDelivery()
+  #   self.matchPicnicQuantityByGrocyQuantity("stuks")
     # self.fillQuantity("60 gram")
     # searchResFound = json.dumps(self.connector.get_product_details(self.connector.get_product_by_barcode('8718796026464')),sort_keys=True, indent=4)
 
@@ -68,16 +58,19 @@ class PicNic(hass.Hass):
     x = requests.post( url, data = postData, headers=header, verify=False)
     return x
 
-  def addProductToGrocy(self, name: str, shop_id: str, imgId: str, price: str):
+  def addProductToGrocy(self, name: str, qu_id:str, shop_id: str, imgId: str, price: str):
     postData = """
     {
       "name": \""""+name+"""\",
-      "qu_id_purchase": \""""+shop_id+"""\",
-      "qu_id_stock": "1",
+      "qu_id_purchase": \""""+qu_id+"""\",
+      "qu_id_stock": \""""+qu_id+"""\",
       "qu_factor_purchase_to_stock": "1.0",
       "shopping_location_id": "3",
       "location_id":"2",
-      "picture_file_name":\""""+imgId+""".png\"
+      "picture_file_name":\""""+imgId+""".png\",
+       "userfields": {
+          "picnic": \""""+shop_id+"""\"
+       }
     }"""
 
     result = self.postToGrocy("objects/products", postData)
@@ -102,7 +95,7 @@ class PicNic(hass.Hass):
        # self.addProductToGrocy(name, id, image_ids, price)
         
   def fillQuantity(self, quantity_text: str):
-      print(quantity_text.replace(",", "."))
+    #  print(quantity_text.replace(",", "."))
       replaced_text = quantity_text.replace(",", ".")
       temp = re.compile("([\d.]*\d+) ([a-zA-Z]+)") 
       res = temp.match(replaced_text).groups() 
@@ -110,15 +103,19 @@ class PicNic(hass.Hass):
           temp = re.compile("([\d.]*\d+) x ([\d.]*\d+) ([a-zA-Z]+)") 
           res = temp.match(replaced_text).groups() 
           calculatie = int(res[0]) * int(res[1])
-          new = {calculatie, res[2]}
-          print("Speciale actie: " + str(new))
-          
-      
-      print("Qantitiy: " + str(res[0]) + " ID: " + str(self.matchPicnicQuantityByGrocyQuantity(res[1])))
+          new = [calculatie, res[2]]
+         
+          print("Qantitiy: " + str(new[0]) + " ID: " + str(self.matchPicnicQuantityByGrocyQuantity(new[1])))
+      else:    
+          print("Qantitiy: " + str(res[0]) + " ID: " + str(self.matchPicnicQuantityByGrocyQuantity(res[1])))
       
   def matchPicnicQuantityByGrocyQuantity(self, picnicQuantity: str):
-     print("picnicquanitity: " + picnicQuantity)
-     print([self.quantities[key] for key in self.quantities if picnicQuantity in key.lower()])
+     #print("picnicquanitity: " + picnicQuantity)
+     found_quantity = ([self.quantities[key] for key in self.quantities if picnicQuantity in key.lower()])
+     if len(found_quantity) > 0:
+         return found_quantity[0]
+     else:
+         return 0
      #return self.quantities[picnicQuantity]["id"]
     # for quantity in self.quantities:
          
