@@ -78,15 +78,15 @@ class PicNic():
      return self.picnic._get(path)
      
   def importLastPicnicDelivery(self):
-   # for x in self.picnic.get_deliveries()[0]["orders"][0]["items"]:
-    x = self.picnic.get_deliveries()[0]["orders"][0]["items"][9]
-    name = x["items"][0]["name"]
-    id = x["items"][0]["id"]
-    image_ids = x["items"][0]["image_ids"][0]
-    price = x["items"][0]["price"]
-    unit_quantity = x["items"][0]["unit_quantity"]
-    converted_quantity = self.fillQuantity(unit_quantity)
-    self.addPicNicProductToGrocy(name, converted_quantity[0], converted_quantity[1], id, image_ids, price)
+    for x in self.picnic.get_deliveries()[0]["orders"][0]["items"]:
+       x = self.picnic.get_deliveries()[0]["orders"][0]["items"]
+       name = x["items"][0]["name"]
+       id = x["items"][0]["id"]
+       image_ids = x["items"][0]["image_ids"][0]
+       price = x["items"][0]["price"]
+       unit_quantity = x["items"][0]["unit_quantity"]
+       converted_quantity = self.fillQuantity(unit_quantity)
+       self.addPicNicProductToGrocy(name, converted_quantity[0], converted_quantity[1], id, image_ids, price)
         
   def fillQuantity(self, quantity_text: str):
       replaced_text = quantity_text.replace(",", ".")
