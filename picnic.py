@@ -13,37 +13,29 @@ import config
 class PicNic():
   picnic_user = config.picnic_user
   picnic_passwd = config.picnic_passwd
-
+  picnic_image_size = config.picnic_img_size
+  picnic_img_baseurl = config.picnic_img_baseurl
+  picnic_numofelementsimport = config.picnic_max_import_products
+  picnic_ean_codes_url = config.picnic_product_ean_list
   quantities=dict()
-  
+
+ # grocy_items = []
+ # test = GrocyPicnicProduct("1234567","75421")
   
   picnic = PicnicAPI(username=picnic_user, password=picnic_passwd, country_code="NL", store=False)
-  grocy = GrocyAPI()
- # connector = JumboConnector()
-  #connector = AHConnector()
-  
-  def initialize(self):
-    
-    # searchResFound = picnic.search('Cottage Cheese.')
-     #
-    #koppeling maken tussen api, picnic en albert heijn
-     #searchResFound = self.connector.get_product_details(self.connector.get_product_by_barcode('40097138'))["title"]
-   # self.addPicnicIDToProduct(40, "900")
-   # print(self.getProductInformation("10764022"))
-    #self.grocy.changePictureFileNameProduct("45", self.grocy.uploadProductPictureToGrocy("d3176c7b1cd82af60db515e93679768449919709c1e3a2525a3e0a3a9a7460f8"))
-     self.getQuantityUnits()
-     self.importLastPicnicDelivery()
-  #   self.matchPicnicQuantityByGrocyQuantity("stuks")
-    # self.fillQuantity("60 gram")
-    # searchResFound = json.dumps(self.connector.get_product_details(self.connector.get_product_by_barcode('8718796026464')),sort_keys=True, indent=4)
+  grocy = GrocyAPI(picnic_image_size, picnic_img_baseurl)
+  json_picnic_data = {}
 
-     
-     #[1]
-     #searchResFound = json.dumps(self.get_delivery("10761823"),sort_keys=True, indent=4)
-     #res = ' '.join(map(str, searchResFound)) #//picnic
-     #res = searchResFound
-    # self.log("PicNic: " + res)
 
+  def __init__(self):
+    json_data = json.loads(requests.get(self.picnic_ean_codes_url).text)     #download all json ean products from file.
+    self.json_picnic_data = json_data["data"]
+
+  def getEANFromPicnicID(self, picnic_id:str):
+    for json_item in self.json_picnic_data:
+      if str(json_item["picnic_id"]) == picnic_id:
+        return str(json_item["ean"])
+    return ""
 
   def addPicnicIDToProduct(self, product_id:str, picnic_id:str):
     self.grocy.addUserFieldToProduct(str(product_id), "{\"picnic\":\""+picnic_id+"\"}")
@@ -58,6 +50,7 @@ class PicNic():
       "qu_factor_purchase_to_stock": "1.0",
       "shopping_location_id": "1",
       "location_id":"2",
+      "barcode": \""""+self.getEANFromPicnicID(picnic_id)+"""\", 
       "tare_weight": \""""+tara_weight+"""\"
     }"""
 
@@ -65,12 +58,12 @@ class PicNic():
     if result.ok:
         json_result = json.loads(result.text)
         grocy_product_id = json_result["created_object_id"]
-        print("Product toegevoegd, nu picnicID toevoegen, grocy_id: " + grocy_product_id + ", picnic_id: " + picnic_id)
+        print("Added picnic product to grocy: " + grocy_product_id + ", picnic_id: " + picnic_id)
         self.addPicnicIDToProduct(grocy_product_id, picnic_id)
-        print("Afbeelding uploaden.")
-        self.grocy.changePictureFileNameProduct(grocy_product_id, self.grocy.uploadProductPictureToGrocy(imgId))
+        print("Uploading picnic image to grocy...")
+        self.grocy.changePictureFileNameProduct(grocy_product_id, self.grocy.addPictureToProduct(imgId))
     else:
-        print("product NIET toegevoegd, want: " + result.text)
+        print("Failed to add picnic product to grocy: " + result.text)
 
   def getProductInformation(self, productID: str):
     # path = "/product/" + productID, just a test.
@@ -78,13 +71,12 @@ class PicNic():
      return self.picnic._get(path)
      
   def importLastPicnicDelivery(self):
-    for x in self.picnic.get_deliveries()[0]["orders"][0]["items"]:
-       x = self.picnic.get_deliveries()[0]["orders"][0]["items"]
-       name = x["items"][0]["name"]
-       id = x["items"][0]["id"]
-       image_ids = x["items"][0]["image_ids"][0]
-       price = x["items"][0]["price"]
-       unit_quantity = x["items"][0]["unit_quantity"]
+    for picnic_item in self.picnic.get_deliveries()[0]["orders"][0]["items"][:self.picnic_numofelementsimport]:
+       name = picnic_item["items"][0]["name"]
+       id = picnic_item["items"][0]["id"]
+       image_ids = picnic_item["items"][0]["image_ids"][0]
+       price = picnic_item["items"][0]["price"]
+       unit_quantity = picnic_item["items"][0]["unit_quantity"]
        converted_quantity = self.fillQuantity(unit_quantity)
        self.addPicNicProductToGrocy(name, converted_quantity[0], converted_quantity[1], id, image_ids, price)
         

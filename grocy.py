@@ -1,15 +1,23 @@
 import requests
 import config
 import json
-import urllib.request
+import urllib3.request
 import base64 
+from picnic_grocy_item import GrocyPicnicProduct
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class GrocyAPI():
   grocy_api_key = config.grocy_api_key
   grocy_api_url = config.grocy_api_url
   verify_ssl = False
-  image_size = "medium"
+  image_size = "" #medium
+  img_baseurl = "" # https://storefront-prod.nl.picnicinternational.com/static/images/
+
+  def __init__(self, img_size: str, img_baseurl: str):
+    self.image_size = img_size
+    self.img_baseurl = img_baseurl
+ 
 
   def makeHeader(self):
     header = {'GROCY-API-KEY': self.grocy_api_key}
@@ -40,8 +48,7 @@ class GrocyAPI():
   def changePictureFileNameProduct(self, product_id: str, filename:str):
       self.putToGrocy('objects/products/' + product_id, ("{\"picture_file_name\":\""+filename+"\"}"))
 
-  #todo split this into picnic and grocy fileupload.
-  def uploadProductPictureToGrocy(self, img_id:str):
+  def addPictureToProduct(self, img_id:str):
     header = {'GROCY-API-KEY': self.grocy_api_key}
     header["Content-Type"] = 'application/octet-stream'
     header["accept"] = '*/*'
@@ -51,11 +58,9 @@ class GrocyAPI():
     base64_bytes = base64.b64encode(encode_bytes) 
 
     url = self.grocy_api_url + 'files/productpictures/' + base64_bytes.decode("ascii")
-    print("Http url: " + url)
-    data_url = "https://storefront-prod.nl.picnicinternational.com/static/images/" + img_id + "/"+self.image_size+".png"
+    data_url = self.img_baseurl + img_id + "/"+self.image_size+".png"
 
-    with urllib.request.urlopen(data_url) as f:
-        html = f.read()
+    html = requests.get(data_url)
 
     x = requests.put( url, data = html, headers=self.makeHeader(), verify=self.verify_ssl)
     if x.ok:
