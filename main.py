@@ -2,8 +2,15 @@ import picnic
 
 p = picnic.PicNic()
 
-p.getQuantityUnits()
+p.getAllGrocyProducts() #first load all existiing grocy products.
+p.getQuantityUnits() #import all grocy quantities.
+
+#p.setInStock("73", "10", "1.56")
 p.importLastPicnicDelivery()
+
+#TODO
+## Setup grocy using picnic items
+## Increase stock picnic ID
 
     
     # searchResFound = picnic.search('Cottage Cheese.')

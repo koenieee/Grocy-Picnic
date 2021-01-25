@@ -3,7 +3,6 @@ import config
 import json
 import urllib3.request
 import base64 
-from picnic_grocy_item import GrocyPicnicProduct
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
@@ -29,7 +28,7 @@ class GrocyAPI():
   def getFromGrocy(self, apiPart: str):
     url = self.grocy_api_url + apiPart
     x = requests.get( url, headers=self.makeHeader(), verify=self.verify_ssl)
-    return x
+    return json.loads(x.text)
 
   def putToGrocy(self, apiPart: str, postData: str):
     url = self.grocy_api_url + apiPart

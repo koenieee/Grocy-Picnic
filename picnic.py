@@ -8,6 +8,8 @@ import requests
 import urllib.request
 import re 
 import config
+from picnic_grocy_item import GrocyPicnicProduct
+
 
 
 class PicNic():
@@ -19,7 +21,7 @@ class PicNic():
   picnic_ean_codes_url = config.picnic_product_ean_list
   quantities=dict()
 
- # grocy_items = []
+  grocy_items = []
  # test = GrocyPicnicProduct("1234567","75421")
   
   picnic = PicnicAPI(username=picnic_user, password=picnic_passwd, country_code="NL", store=False)
@@ -41,7 +43,7 @@ class PicNic():
     self.grocy.addUserFieldToProduct(str(product_id), "{\"picnic\":\""+picnic_id+"\"}")
 
 
-  def addPicNicProductToGrocy(self, name: str, tara_weight: str, qu_id:str, picnic_id: str, imgId: str, price: str):
+  def addPicNicProductToGrocy(self, name: str, qu_id:str, picnic_id: str, imgId: str, price: str):
     postData = """
     {
       "name": \""""+name+"""\",
@@ -50,8 +52,7 @@ class PicNic():
       "qu_factor_purchase_to_stock": "1.0",
       "shopping_location_id": "1",
       "location_id":"2",
-      "barcode": \""""+self.getEANFromPicnicID(picnic_id)+"""\", 
-      "tare_weight": \""""+tara_weight+"""\"
+      "barcode": \""""+self.getEANFromPicnicID(picnic_id)+"""\"
     }"""
 
     result = self.grocy.postToGrocy("objects/products", postData)
@@ -62,8 +63,10 @@ class PicNic():
         self.addPicnicIDToProduct(grocy_product_id, picnic_id)
         print("Uploading picnic image to grocy...")
         self.grocy.changePictureFileNameProduct(grocy_product_id, self.grocy.addPictureToProduct(imgId))
+        return grocy_product_id
     else:
         print("Failed to add picnic product to grocy: " + result.text)
+        return 0
 
   def getProductInformation(self, productID: str):
     # path = "/product/" + productID, just a test.
@@ -72,13 +75,29 @@ class PicNic():
      
   def importLastPicnicDelivery(self):
     for picnic_item in self.picnic.get_deliveries()[0]["orders"][0]["items"][:self.picnic_numofelementsimport]:
+       #picnic data:
        name = picnic_item["items"][0]["name"]
        id = picnic_item["items"][0]["id"]
        image_ids = picnic_item["items"][0]["image_ids"][0]
-       price = picnic_item["items"][0]["price"]
+       price = (picnic_item["items"][0]["price"] / 100)  #used in stock data
        unit_quantity = picnic_item["items"][0]["unit_quantity"]
        converted_quantity = self.fillQuantity(unit_quantity)
-       self.addPicNicProductToGrocy(name, converted_quantity[0], converted_quantity[1], id, image_ids, price)
+       sort_of_quantity = converted_quantity[1]
+       how_much =  converted_quantity[0]
+       
+       #grocy_data:
+       grocy_id_existing_product = self.getPicnicProductInGrocy(id)
+       if grocy_id_existing_product != 0:
+       #   print("picnic item already in grocy..." + price)
+          print("Increasing stock: " + how_much + " with id: " + sort_of_quantity)
+          self.setInStock(grocy_id_existing_product, how_much, price)
+       else: 
+          new_grocy_id = self.addPicNicProductToGrocy(name, sort_of_quantity, id, image_ids, price)
+          if new_grocy_id != 0:
+            self.setInStock(new_grocy_id, how_much, price)
+
+          #todo increase stock after adding product.
+
         
   def fillQuantity(self, quantity_text: str):
       replaced_text = quantity_text.replace(",", ".")
@@ -110,13 +129,34 @@ class PicNic():
 
 
   def getQuantityUnits(self):
-      x = self.grocy.getFromGrocy('objects/quantity_units')
-      json_data = json.loads(x.text)
-      #print(json_data)
+      json_data = self.grocy.getFromGrocy('objects/quantity_units')
       for quantity in json_data:
          self.quantities[quantity["name"]] = quantity["id"]
       print(self.quantities)
+
+  def setInStock(self, grocy_id: str, stock: str, price: str):
+      print("price: " + str(price))
+      result = self.grocy.postToGrocy('stock/products/'+grocy_id+'/add', "{\"amount\":\""+str(stock)+"\", \"price\":\""+str(price)+"\"}")
+      if result.ok:
+         print("setInStock: " + result.text)
+      else:
+         print("Failed to add stock: " + result.text)
+
+  def getPicnicProductInGrocy(self, picnic_id: str):
+      for grocy_item in self.grocy_items:
+        if grocy_item.picnic_id == picnic_id:
+          return grocy_item.grocy_id
+      return 0
+
+  def getAllGrocyProducts(self):
+      json_data = self.grocy.getFromGrocy('objects/products')
     
+      for product in json_data:
+        grocy_product = GrocyPicnicProduct(product["userfields"]["picnic"], product["id"], product["name"], product["picture_file_name"], product["tare_weight"], product["qu_id_stock"])
+        self.grocy_items.append(grocy_product)
+
+      #print(self.grocy_items)
+
   def pretty_print_POST(self,req):
     """
     At this point it is completely built and ready
