@@ -44,16 +44,14 @@ class PicNic():
 
 
   def addPicNicProductToGrocy(self, name: str, qu_id:str, picnic_id: str, imgId: str, price: str):
-    postData = """
-    {
-      "name": \""""+name+"""\",
-      "qu_id_purchase": \""""+qu_id+"""\",
-      "qu_id_stock": \""""+qu_id+"""\",
-      "qu_factor_purchase_to_stock": "1.0",
-      "shopping_location_id": "1",
-      "location_id":"2",
-      "barcode": \""""+self.getEANFromPicnicID(picnic_id)+"""\"
-    }"""
+    postData = {}
+    postData["name"] = name
+    postData["qu_id_purchase"] = qu_id
+    postData["qu_id_stock"] = qu_id
+    postData["qu_factor_purchase_to_stock"] = 1.0
+    postData["shopping_location_id"] = 1
+    postData["location_id"] = 2
+    postData["barcode"] = self.getEANFromPicnicID(picnic_id)
 
     result = self.grocy.postToGrocy("objects/products", postData)
     if result.ok:
@@ -74,7 +72,9 @@ class PicNic():
      return self.picnic._get(path)
      
   def importLastPicnicDelivery(self):
-    for picnic_item in self.picnic.get_deliveries()[0]["orders"][0]["items"][:self.picnic_numofelementsimport]:
+    order_data = self.picnic.get_deliveries()[0]["orders"][-1]["creation_time"]
+    #print(json.dumps(order_data))
+    for picnic_item in self.picnic.get_deliveries()[0]["orders"][-1]["items"][:self.picnic_numofelementsimport]: # last order of picnic
        #picnic data:
        name = picnic_item["items"][0]["name"]
        id = picnic_item["items"][0]["id"]
@@ -90,11 +90,11 @@ class PicNic():
        if grocy_id_existing_product != 0:
        #   print("picnic item already in grocy..." + price)
           print("Increasing stock: " + how_much + " with id: " + sort_of_quantity)
-          self.setInStock(grocy_id_existing_product, how_much, price)
+          self.setInStock(grocy_id_existing_product, how_much, price, order_data)
        else: 
           new_grocy_id = self.addPicNicProductToGrocy(name, sort_of_quantity, id, image_ids, price)
           if new_grocy_id != 0:
-            self.setInStock(new_grocy_id, how_much, price)
+            self.setInStock(new_grocy_id, how_much, price, order_data)
 
           #todo increase stock after adding product.
 
@@ -134,11 +134,15 @@ class PicNic():
          self.quantities[quantity["name"]] = quantity["id"]
       print(self.quantities)
 
-  def setInStock(self, grocy_id: str, stock: str, price: str):
-      print("price: " + str(price))
-      result = self.grocy.postToGrocy('stock/products/'+grocy_id+'/add', "{\"amount\":\""+str(stock)+"\", \"price\":\""+str(price)+"\"}")
+  def setInStock(self, grocy_id: str, stock: str, price: str, order_date):
+      post_data = {}
+      post_data["amount"] = str(stock)
+      post_data["price"] = str(price)
+      post_data["purchased_date"] = str(order_date)#order_date
+      print("grocy_id: " + grocy_id)
+      result = self.grocy.postToGrocy('stock/products/'+grocy_id+'/add', post_data)
       if result.ok:
-         print("setInStock: " + result.text)
+         print("setInStock: succes")
       else:
          print("Failed to add stock: " + result.text)
 
@@ -157,21 +161,6 @@ class PicNic():
 
       #print(self.grocy_items)
 
-  def pretty_print_POST(self,req):
-    """
-    At this point it is completely built and ready
-    to be fired; it is "prepared".
-
-    However pay attention at the formatting used in 
-    this function because it is programmed to be pretty 
-    printed and may differ from the actual request.
-    """
-    print('{}\n{}\r\n{}\r\n\r\n{}'.format(
-        '-----------START-----------',
-        req.method + ' ' + req.url,
-        '\r\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
-        req.body,
-    ))
      
      
      

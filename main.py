@@ -9,8 +9,14 @@ p.getQuantityUnits() #import all grocy quantities.
 p.importLastPicnicDelivery()
 
 #TODO
-## Setup grocy using picnic items
+## Setup grocy using picnic items, import quantities from github repo
 ## Increase stock picnic ID
+## Set stock date right
+## check if order is already processed, then don't add to stock
+## Todo ml to Miliiters quantitiy
+## Fill in kcal, product details.
+## TOdo import 'vers na aantal dagen, minimum' picnic, count the real delivery date + numOfDays.
+
 
     
     # searchResFound = picnic.search('Cottage Cheese.')

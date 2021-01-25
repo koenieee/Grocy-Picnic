@@ -37,7 +37,7 @@ class GrocyAPI():
 
   def postToGrocy(self, apiPart: str, postData: str):
     url = self.grocy_api_url + apiPart
-    x = requests.post( url, data = postData, headers=self.makeHeader(), verify=self.verify_ssl)
+    x = requests.post( url, data = json.dumps(postData), headers=self.makeHeader(), verify=self.verify_ssl)
     return x
 
   def addUserFieldToProduct(self, product_id: str, userfield_data:str):
