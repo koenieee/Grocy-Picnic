@@ -29,6 +29,8 @@ class PicNic():
   def __init__(self):
     json_data = json.loads(requests.get(self.picnic_ean_codes_url).text)     #download all json ean products from file
     self.json_picnic_data = json_data["data"]
+    self.getAllGrocyProducts() #first load all existing grocy products.
+    self.getQuantityUnits() #import all grocy quantities.
   #  print(self.getProductInformation(10465898))
 
 

@@ -1,12 +1,14 @@
 import picnic
+import picnic_setup_grocy
 
-p = picnic.PicNic()
 
-p.getAllGrocyProducts() #first load all existiing grocy products.
-p.getQuantityUnits() #import all grocy quantities.
+#Firt time run this. Make sure you have an empty Grocy database (or not, but prepare for conflicts then)
+#install = picnic_setup_grocy.PicnicSetupGrocy()
+#install.installAll()
 
-#p.setupGrocyPicnicSettings()
-#p.importLastPicnicDelivery()
+#To import picnic products run these, comment above setup: 
+pp = picnic.PicNic()
+pp.importLastPicnicDelivery()
 
 #TODO
 ## Set stock date right
