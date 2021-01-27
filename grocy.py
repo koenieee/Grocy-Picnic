@@ -10,8 +10,8 @@ class GrocyAPI():
   grocy_api_key = config.grocy_api_key
   grocy_api_url = config.grocy_api_url
   verify_ssl = False
-  image_size = "" #medium
-  img_baseurl = "" # https://storefront-prod.nl.picnicinternational.com/static/images/
+  image_size = "" 
+  img_baseurl = "" 
 
   def __init__(self, img_size: str, img_baseurl: str):
     self.image_size = img_size

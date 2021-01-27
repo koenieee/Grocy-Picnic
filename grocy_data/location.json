@@ -1,0 +1,10 @@
+{
+    "data":
+    [
+        {
+            "name": "Home",
+            "description": "Home location",
+            "is_freezer": "0"
+        }
+    ]
+}

@@ -1,5 +1,4 @@
 from python_picnic_api import PicnicAPI
-#import appdaemon.plugins.hass.hassapi as hass
 import json
 from supermarktconnector.jumbo import JumboConnector
 from supermarktconnector.ah import AHConnector
@@ -19,11 +18,8 @@ class PicNic():
   picnic_img_baseurl = config.picnic_img_baseurl
   picnic_numofelementsimport = config.picnic_max_import_products
   picnic_ean_codes_url = config.picnic_product_ean_list
-  picnic_quantity_url = config.picnic_quantity_list
   quantities=dict()
-
   grocy_items = []
- # test = GrocyPicnicProduct("1234567","75421")
   
   picnic = PicnicAPI(username=picnic_user, password=picnic_passwd, country_code="NL", store=False)
   grocy = GrocyAPI(picnic_image_size, picnic_img_baseurl)
@@ -31,16 +27,10 @@ class PicNic():
 
 
   def __init__(self):
-    json_data = json.loads(requests.get(self.picnic_ean_codes_url).text)     #download all json ean products from file.
+    json_data = json.loads(requests.get(self.picnic_ean_codes_url).text)     #download all json ean products from file
     self.json_picnic_data = json_data["data"]
+  #  print(self.getProductInformation(10465898))
 
-
-  def setupGrocyPicnicSettings(self):
-    json_data = json.loads(requests.get(self.picnic_quantity_url).text)
-    for quantity in json_data["data"]:
-      print(quantity)
-    #self.grocy.postToGrocy("/objects/quantity_units", )
-    return
 
   def getEANFromPicnicID(self, picnic_id:str):
     for json_item in self.json_picnic_data:
@@ -51,17 +41,16 @@ class PicNic():
   def addPicnicIDToProduct(self, product_id:str, picnic_id:str):
     self.grocy.addUserFieldToProduct(str(product_id), "{\"picnic\":\""+picnic_id+"\"}")
 
-
   def addPicNicProductToGrocy(self, name: str, qu_id:str, picnic_id: str, imgId: str, price: str):
     postData = {}
     postData["name"] = name
     postData["qu_id_purchase"] = qu_id
     postData["qu_id_stock"] = qu_id
     postData["qu_factor_purchase_to_stock"] = 1.0
-    postData["shopping_location_id"] = 1
-    postData["location_id"] = 2
+    postData["shopping_location_id"] = config.default_store_id
+    postData["location_id"] = config.default_location_id
     postData["barcode"] = self.getEANFromPicnicID(picnic_id)
-    postData["default_best_before_days"] = -1 #disable tenminste houdtbaar tot
+    postData["default_best_before_days"] = config.disable_tht #disable tenminste houdtbaar tot
 
     result = self.grocy.postToGrocy("objects/products", postData)
     if result.ok:
@@ -77,8 +66,7 @@ class PicNic():
         return 0
 
   def getProductInformation(self, productID: str):
-    # path = "/product/" + productID, just a test.
-     path = '/my_store/'
+     path = "/product/" + str(productID) #, just a test.
      return self.picnic._get(path)
      
   def importLastPicnicDelivery(self):

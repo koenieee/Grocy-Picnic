@@ -1,0 +1,21 @@
+{
+    "data":
+    [
+        {   
+            "entity": "products",
+            "name": "picnic",
+            "caption": "The ID in the picnic database",
+            "type": "text-single-line",
+            "show_as_column_in_tables": "1"
+
+        },
+        {   
+            "entity": "shopping_list",
+            "name": "lastdeliveryid",
+            "caption": "The last delivery id from the picnic database",
+            "type": "text-single-line",
+            "show_as_column_in_tables": "1"
+
+        }
+    ]
+}
