@@ -19,6 +19,7 @@ class PicNic():
   picnic_img_baseurl = config.picnic_img_baseurl
   picnic_numofelementsimport = config.picnic_max_import_products
   picnic_ean_codes_url = config.picnic_product_ean_list
+  picnic_quantity_url = config.picnic_quantity_list
   quantities=dict()
 
   grocy_items = []
@@ -32,6 +33,14 @@ class PicNic():
   def __init__(self):
     json_data = json.loads(requests.get(self.picnic_ean_codes_url).text)     #download all json ean products from file.
     self.json_picnic_data = json_data["data"]
+
+
+  def setupGrocyPicnicSettings(self):
+    json_data = json.loads(requests.get(self.picnic_quantity_url).text)
+    for quantity in json_data["data"]:
+      print(quantity)
+    #self.grocy.postToGrocy("/objects/quantity_units", )
+    return
 
   def getEANFromPicnicID(self, picnic_id:str):
     for json_item in self.json_picnic_data:
@@ -52,6 +61,7 @@ class PicNic():
     postData["shopping_location_id"] = 1
     postData["location_id"] = 2
     postData["barcode"] = self.getEANFromPicnicID(picnic_id)
+    postData["default_best_before_days"] = -1 #disable tenminste houdtbaar tot
 
     result = self.grocy.postToGrocy("objects/products", postData)
     if result.ok:
@@ -72,9 +82,12 @@ class PicNic():
      return self.picnic._get(path)
      
   def importLastPicnicDelivery(self):
-    order_data = self.picnic.get_deliveries()[0]["orders"][-1]["creation_time"]
-    #print(json.dumps(order_data))
-    for picnic_item in self.picnic.get_deliveries()[0]["orders"][-1]["items"][:self.picnic_numofelementsimport]: # last order of picnic
+    last_delivery_index = -1
+    order_data = self.picnic.get_deliveries()[0]["orders"][last_delivery_index]["creation_time"]
+    delivery_date = self.picnic.get_deliveries()[0]["delivery_time"]["start"]
+
+    print(json.dumps(delivery_date))
+    for picnic_item in self.picnic.get_deliveries()[0]["orders"][last_delivery_index]["items"][:self.picnic_numofelementsimport]: # last order of picnic
        #picnic data:
        name = picnic_item["items"][0]["name"]
        id = picnic_item["items"][0]["id"]
