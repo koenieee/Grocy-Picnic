@@ -4,12 +4,13 @@ Picnic (online supermarket) connection between Grocy (ERP fridge/house managemen
 ## Requirements
 - https://github.com/MikeBrink/python-picnic-api
 - - Inspired by: https://github.com/MikeBrink/python-picnic-api/issues/7
-
+- https://github.com/grocy/grocy (ofc)
 
 ## Getting Started
 
 1. Make sure you have pip3 and python3 installed
-2. Run this command: `pip3 -r requirements.txt`
+2. And make sure you have a grocy instance up & running.
+3. Run this command: `pip3 install -r requirements.txt`
 4. Change `config.py` to your needs (fill in user and grocy settings). Change max number of import product (limit if you want to)
    
    Note: don't change the json files for some default grocy settings (these are needed by the picnic import script) Change them only if you know what you do...
