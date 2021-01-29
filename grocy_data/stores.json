@@ -1,9 +1,8 @@
 {
-  "data": 
-  [
+  "data": [
     {
-    "name": "Picnic",
-    "description": "Picnic online supermarket store"
+      "name": "Picnic",
+      "description": "Picnic online supermarket store"
     }
   ]
 }

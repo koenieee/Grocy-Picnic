@@ -1,55 +1,52 @@
 {
-    "data":[
-
+    "data": [
         {
-        "name": "Verpakking",
-        "name_plural": "Verpakkingen"
+            "name": "Verpakking",
+            "name_plural": "Verpakkingen"
         },
         {
-        "name": "Glas",
-        "name_plural": "Glazen"
+            "name": "Glas",
+            "name_plural": "Glazen"
         },
         {
-        "name": "Fles",
-        "name_plural": "Flessen"
+            "name": "Fles",
+            "name_plural": "Flessen"
         },
         {
-        "name": "Gram",
-        "name_plural": "Gram"
+            "name": "Gram",
+            "name_plural": "Gram"
         },
         {
-        "name": "Liter",
-        "name_plural": "Liters"
+            "name": "Liter",
+            "name_plural": "Liters"
         },
         {
-        "name": "Milliliter",
-        "name_plural": "Milliliter"
+            "name": "Milliliter",
+            "name_plural": "Milliliter"
         },
         {
-        "name": "Plakje",
-        "name_plural": "Plakjes"
+            "name": "Plakje",
+            "name_plural": "Plakjes"
         },
         {
-        "name": "Rol",
-        "name_plural": "Rollen"
+            "name": "Rol",
+            "name_plural": "Rollen"
         },
         {
-        "name": "Beetje",
-        "name_plural": "Beetjes"
+            "name": "Beetje",
+            "name_plural": "Beetjes"
         },
         {
-        "name": "Blokjes",
-        "name_plural": "Blokjes"
+            "name": "Blokjes",
+            "name_plural": "Blokjes"
         },
         {
-        "name": "Kilo",
-        "name_plural": "Kilo"
+            "name": "Kilo",
+            "name_plural": "Kilo"
         },
         {
-        "name": "Stuks",
-        "name_plural": "Stuks"
+            "name": "Stuks",
+            "name_plural": "Stuks"
         }
     ]
 }
-
-

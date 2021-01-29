@@ -1,4 +1,3 @@
 requests
-supermarktconnector
 pybase64
 python_picnic_api
